@@ -37,7 +37,7 @@ from_error! { LocalMacAddrsError => MacAddr(MacAddrError) }
 from_error! { LocalMacAddrsError => Io(io::Error) }
 
 pub fn net_dev_mac_addr(path: &Path) -> Result<Vec<u8>, MacAddrError> {
-    let mut f = try!(fs::File::open(path));
+    let mut f = try!(fs::File::open(&path.join("address")));
     let s_mac = {
         let mut v = Vec::with_capacity(DUMMY_MAC.len() + 1);
         try!(f.read_to_end(&mut v));
@@ -56,12 +56,31 @@ pub fn sysfs() -> PathBuf {
     }
 }
 
-/* TODO: use a full representation of the system's devices */
-static SYSFS_CLASS_NET : &'static str = "/class/net";
-pub fn local_mac_addrs() -> Result<Vec<Vec<u8>>, LocalMacAddrsError> {
-    let mut addrs : Vec<Vec<u8>> = vec![];
+macro_rules! try_or {
+    ($try:expr, $or:expr) => (
+        let t = $try;
+        match t {
+            Ok(v) => v,
+            Err(e) => return $or(e)
+        }
+    )
+}
 
-    for net_dev_res in try!(fs::read_dir(&sysfs().join(SYSFS_CLASS_NET))) {
+
+/* TODO: use a full representation of the system's devices */
+static SYSFS_CLASS_NET : &'static str = "class/net";
+pub fn local_mac_addrs() -> Vec<Vec<u8>> {
+    let mut addrs : Vec<Vec<u8>> = vec![];
+    let net = &sysfs().join(SYSFS_CLASS_NET);
+    let dirs = match fs::read_dir(net) {
+        Ok(a) => a,
+        Err(e) => {
+            warn!("Could not read '{:?}', {}", net, e);
+            return vec![];
+        }
+    };
+
+    for net_dev_res in dirs {
         let net_dev = match net_dev_res {
             Ok(a) => a.path(),
             Err(e) => {
@@ -88,7 +107,7 @@ pub fn local_mac_addrs() -> Result<Vec<Vec<u8>>, LocalMacAddrsError> {
         }
     }
 
-    Ok(addrs)
+    addrs
 }
 
 #[cfg(test)]
