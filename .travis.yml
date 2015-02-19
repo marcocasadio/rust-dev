@@ -1,0 +1,15 @@
+language: rust
+env:
+  global:
+    - secure: dePiiHXrGgoetKjjS1/Qd6legGBf6YK0enNQg1ZDSk0o+cCHRCcAf3MX/XGe+IniT1i+pOJjMPGsQiTENkjN+rCikz+lf7CbTMzpDrxq+i8xr/tPGvfaC/VkEISxFFg5crflznO7go9bIU9LjN3B7JK6V/wMiay5vcdFCm2AaMY=
+
+script:
+- cargo build --verbose
+- cargo test --verbose
+- cargo doc --verbose
+
+after_script:
+  - ln -s target/doc doc
+  - curl -v http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN > ./upload-docs
+  - python -c 'print(open("upload-docs").read())'
+  - sh ./upload-docs

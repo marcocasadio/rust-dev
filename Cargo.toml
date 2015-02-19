@@ -3,6 +3,8 @@
 name = "dev"
 version = "0.0.1"
 authors = ["Cody P Schafer <dev@codyps.com>"]
+license = "MIT"
+repository = "https://github.com/jmesmon/rust-dev"
 
 [dependencies]
 log = "*"
