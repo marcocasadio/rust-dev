@@ -1,0 +1,13 @@
+[package]
+
+name = "dev"
+version = "0.0.1"
+authors = ["Cody P Schafer <dev@codyps.com>"]
+
+[dependencies]
+log = "*"
+rustc-serialize = "*"
+err = "*"
+
+[dev-dependencies]
+env_logger = "*"
