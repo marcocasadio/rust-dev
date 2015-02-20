@@ -5,6 +5,7 @@ version = "0.0.1"
 authors = ["Cody P Schafer <dev@codyps.com>"]
 license = "MIT"
 repository = "https://github.com/jmesmon/rust-dev"
+description = "An interface to system/kernel devices"
 
 [dependencies]
 log = "*"
