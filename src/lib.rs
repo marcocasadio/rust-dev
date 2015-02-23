@@ -46,12 +46,12 @@ pub fn net_dev_mac_addr(path: &Path) -> Result<Vec<u8>, MacAddrError> {
             .collect()
         ))
     };
-    Ok(try!(hex::FromHex::from_hex(&s_mac[])))
+    Ok(try!(hex::FromHex::from_hex(&s_mac[..])))
 }
 
 pub fn sysfs() -> PathBuf {
     match env::var("SYSFS_PATH") {
-        Ok(p) => PathBuf::new(&p[]),
+        Ok(p) => PathBuf::new(&p[..]),
         Err(_) => PathBuf::new("/sys")
     }
 }
