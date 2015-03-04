@@ -23,6 +23,13 @@ pub enum MacAddrError {
     Utf8(std::string::FromUtf8Error),
 }
 
+error_enum! {
+    pub enum DevPropError {
+        auto Io(io::Error),
+        auto Utf8(std::string::FromUtf8Error)
+    }
+}
+
 from_error! { MacAddrError => FromHex(hex::FromHexError) }
 from_error! { MacAddrError => Io(io::Error) }
 from_error! { MacAddrError => Utf8(std::string::FromUtf8Error) }
@@ -49,6 +56,16 @@ pub fn net_dev_mac_addr(path: &Path) -> Result<Vec<u8>, MacAddrError> {
     Ok(try!(hex::FromHex::from_hex(&s_mac[..])))
 }
 
+pub fn netdev_address(path: &Path) -> Result<String, DevPropError> {
+    let mut f = try!(fs::File::open(&path.join("address")));
+    let s_mac = {
+        let mut v = Vec::with_capacity(DUMMY_MAC.len() + 1);
+        try!(f.read_to_end(&mut v));
+        try!(String::from_utf8(v))
+    };
+    Ok(s_mac)
+}
+
 pub fn sysfs() -> PathBuf {
     match env::var("SYSFS_PATH") {
         Ok(p) => PathBuf::new(&p[..]),
@@ -69,8 +86,8 @@ macro_rules! try_or {
 
 /* TODO: use a full representation of the system's devices */
 static SYSFS_CLASS_NET : &'static str = "class/net";
-pub fn local_mac_addrs() -> Vec<Vec<u8>> {
-    let mut addrs : Vec<Vec<u8>> = vec![];
+pub fn netdev_addrs() -> Vec<String> {
+    let mut addrs : Vec<String> = vec![];
     let net = &sysfs().join(SYSFS_CLASS_NET);
     let dirs = match fs::read_dir(net) {
         Ok(a) => a,
@@ -101,7 +118,7 @@ pub fn local_mac_addrs() -> Vec<Vec<u8>> {
             continue;
         }
 
-        match net_dev_mac_addr(&*net_dev) {
+        match netdev_address(&*net_dev) {
             Ok(a) => addrs.push(a),
             Err(e) => warn!("Could not read mac for {:?}: {:?}", net_dev, e)
         }
