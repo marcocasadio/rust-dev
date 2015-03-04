@@ -1,4 +1,4 @@
-#![feature(path,io,fs,env)]
+#![feature(path,io,fs)]
 
 #[macro_use]
 extern crate log;
