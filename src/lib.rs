@@ -1,5 +1,3 @@
-#![feature(core)]
-
 #[macro_use]
 extern crate log;
 
@@ -7,10 +5,13 @@ extern crate rustc_serialize;
 #[macro_use]
 extern crate err;
 
+extern crate nix;
+extern crate libc;
 
 use rustc_serialize::hex;
-use std::{fs,env,io};
+use std::{mem, fs,env,io};
 
+use std::os::unix::prelude::AsRawFd;
 use std::borrow::ToOwned;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -22,6 +23,13 @@ from_enum! {
         auto Io(io::Error),
         auto Utf8(std::str::Utf8Error)
     }
+}
+
+/// Size in bytes
+pub fn blockdev_size(f: &AsRawFd) -> Result<u64, nix::Error>
+{
+    let blkgetsize64 = nix::sys::ioctl::op_read(0x12, 114, mem::size_of::<libc::size_t>());
+    unsafe { nix::sys::ioctl::read(f.as_raw_fd(), blkgetsize64) }
 }
 
 pub fn macaddr_from_str(s: &str) -> Result<Vec<u8>, hex::FromHexError> {
@@ -57,7 +65,6 @@ macro_rules! try_or {
         }
     )
 }
-
 
 /* TODO: use a full representation of the system's devices */
 static SYSFS_CLASS_NET : &'static str = "class/net";

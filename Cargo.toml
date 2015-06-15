@@ -11,6 +11,8 @@ description = "An interface to system/kernel devices"
 log = "*"
 rustc-serialize = "*"
 err = "*"
+nix = "*"
+libc = "*"
 
 [dev-dependencies]
 env_logger = "*"
