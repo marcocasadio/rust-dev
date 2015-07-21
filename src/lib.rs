@@ -32,6 +32,12 @@ pub fn blockdev_size(f: &AsRawFd) -> Result<u64, nix::Error>
     unsafe { nix::sys::ioctl::read(f.as_raw_fd(), blkgetsize64) }
 }
 
+pub fn blockdev_phys_blocksize(f: &AsRawFd) -> Result<libc::c_int, nix::Error>
+{
+    let blkpbszget = nix::sys::ioctl::op_read(0x12, 123, 0);
+    nix::sys::ioctl::execute(f.as_raw_fd(), blkpbszget)
+}
+
 pub fn macaddr_from_str(s: &str) -> Result<Vec<u8>, hex::FromHexError> {
     let mac : String = s.chars()
             .filter(|b| *b != ':')
