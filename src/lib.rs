@@ -56,9 +56,9 @@ pub fn netdev_address(path: &Path) -> Result<String, DevPropError> {
 }
 
 pub fn sysfs() -> PathBuf {
-    match env::var("SYSFS_PATH") {
-        Ok(p) => PathBuf::from(&p[..]),
-        Err(_) => PathBuf::from("/sys")
+    match env::var_os("SYSFS_PATH") {
+        Some(p) => PathBuf::from(&p),
+        None    => PathBuf::from("/sys")
     }
 }
 
