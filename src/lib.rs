@@ -5,16 +5,19 @@ extern crate rustc_serialize;
 #[macro_use]
 extern crate err;
 
+#[macro_use]
 extern crate nix;
 extern crate libc;
 
 use rustc_serialize::hex;
-use std::{mem, fs,env,io};
+use std::{fs,env,io};
 
 use std::os::unix::prelude::AsRawFd;
 use std::borrow::ToOwned;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::mem;
+use libc::{size_t, c_int};
 
 static DUMMY_MAC: &'static str = "00:00:00:00:00:00";
 
@@ -25,17 +28,28 @@ from_enum! {
     }
 }
 
-/// Size in bytes
-pub fn blockdev_size(f: &AsRawFd) -> Result<u64, nix::Error>
-{
-    let blkgetsize64 = nix::sys::ioctl::op_read(0x12, 114, mem::size_of::<libc::size_t>());
-    unsafe { nix::sys::ioctl::read(f.as_raw_fd(), blkgetsize64) }
+fn nix_to_io<T>(x: nix::Result<T>) -> io::Result<T> {
+    x.map_err(|v| match v {
+        nix::Error::Sys(errno) => io::Error::from_raw_os_error(errno as i32),
+        nix::Error::InvalidPath => io::Error::new(io::ErrorKind::InvalidInput, "InvalidPath"),
+    })
 }
 
-pub fn blockdev_phys_blocksize(f: &AsRawFd) -> Result<libc::c_int, nix::Error>
-{
-    let blkpbszget = nix::sys::ioctl::op_read(0x12, 123, 0);
-    nix::sys::ioctl::execute(f.as_raw_fd(), blkpbszget)
+/// Size in bytes
+ioctl!{bad blkgetsize64 with ior!(0x12, 114, mem::size_of::<size_t>()) }
+pub fn blockdev_size(fd: &AsRawFd) -> io::Result<u64> {
+    unsafe {
+        let mut r : u64 = 0;
+        try!(nix_to_io(blkgetsize64(fd.as_raw_fd(), mem::transmute(&mut r))));
+        Ok(r)
+    }
+}
+
+ioctl!{none blkpbszget with 0x12, 123}
+pub fn blockdev_phys_block_size(fd: &AsRawFd) -> io::Result<c_int> {
+    unsafe {
+        nix_to_io(blkpbszget(fd.as_raw_fd()))
+    }
 }
 
 pub fn macaddr_from_str(s: &str) -> Result<Vec<u8>, hex::FromHexError> {
