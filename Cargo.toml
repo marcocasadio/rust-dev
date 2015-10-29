@@ -1,18 +1,13 @@
 [package]
 
 name = "dev"
-version = "0.0.8"
+version = "0.1.0"
 authors = ["Cody P Schafer <dev@codyps.com>"]
 license = "MIT"
 repository = "https://github.com/jmesmon/rust-dev"
 description = "An interface to system/kernel devices"
 
 [dependencies]
-log = "*"
-rustc-serialize = "*"
-err = "*"
-nix = "*"
-libc = "*"
-
-[dev-dependencies]
-env_logger = "*"
+err = "0.*"
+nix = "0.*"
+libc = "0.*"
